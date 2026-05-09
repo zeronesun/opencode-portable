@@ -22,7 +22,7 @@ jobs:
           TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name')
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-      # 构建 普通版 x64 (你之前能用的版本)
+      # 构建 普通版 x64（强制传递 normal 参数）
       - name: Build normal x86_64
         run: |
           chmod +x build/build.sh
@@ -33,12 +33,12 @@ jobs:
         run: |
           ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64 normal
 
-      # 构建 musl版 x64 (旧系统专用)
+      # 构建 musl版 x64
       - name: Build musl x86_64
         run: |
           ./build/build.sh ${{ steps.upstream.outputs.TAG }} x86_64 musl
 
-      # 构建 musl版 arm64 (旧系统专用)
+      # 构建 musl版 arm64
       - name: Build musl arm64
         run: |
           ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64 musl
