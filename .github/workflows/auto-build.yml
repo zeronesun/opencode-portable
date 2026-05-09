@@ -12,40 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5  # 升级到v5，解决Node.js弃用警告
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq git curl jq docker.io
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
 
-      - name: Get upstream latest version
+      - name: Get latest upstream version
         id: upstream
         run: |
-          # 简单直接获取官方最新版本
           UPSTREAM_TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
-          
-          if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" == "null" ]; then
-            echo "::error::Failed to get upstream version"
-            exit 1
-          fi
-          
           echo "UPSTREAM_TAG=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
           echo "Found upstream version: $UPSTREAM_TAG"
 
-      - name: Check if version already exists
+      - name: Check if version exists
         id: check
         run: |
-          TARGET_TAG="${{ steps.upstream.outputs.UPSTREAM_TAG }}-portable"
-          
-          # 使用git ls-remote检查标签是否存在，最可靠的方法
+          TARGET_TAG=${UPSTREAM_TAG}-portable
           if git ls-remote --tags origin | grep -q "refs/tags/$TARGET_TAG"; then
             echo "Version $TARGET_TAG already exists, skipping build"
             echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
@@ -54,18 +38,16 @@ jobs:
             echo "SKIP_BUILD=false" >> $GITHUB_OUTPUT
             echo "TARGET_TAG=$TARGET_TAG" >> $GITHUB_OUTPUT
           fi
+        env:
+          UPSTREAM_TAG: ${{ steps.upstream.outputs.UPSTREAM_TAG }}
 
       - name: Clone upstream code
         if: steps.check.outputs.SKIP_BUILD == 'false'
-        run: |
-          git clone --depth 1 --branch ${{ steps.upstream.outputs.UPSTREAM_TAG }} https://github.com/anomalyco/opencode.git upstream
+        run: git clone --depth 1 --branch ${{ steps.upstream.outputs.UPSTREAM_TAG }} https://github.com/anomalyco/opencode upstream
 
-      - name: Apply CJK patches
+      - name: Apply CJK patch
         if: steps.check.outputs.SKIP_BUILD == 'false'
-        run: |
-          cd upstream
-          git apply ../patches/001-cjk-fix.patch
-          echo "CJK patches applied successfully"
+        run: cd upstream && git apply ../patches/001-cjk-fix.patch
 
       - name: Build binaries
         if: steps.check.outputs.SKIP_BUILD == 'false'
@@ -73,7 +55,7 @@ jobs:
           chmod +x build/build.sh
           ./build/build.sh upstream ${{ steps.upstream.outputs.UPSTREAM_TAG }}
 
-      - name: Generate checksums
+      - name: Generate SHA256 checksums
         if: steps.check.outputs.SKIP_BUILD == 'false'
         run: |
           cd dist
@@ -81,7 +63,7 @@ jobs:
           echo "Checksums generated:"
           cat SHA256SUMS
 
-      - name: Create release
+      - name: Create Release
         if: steps.check.outputs.SKIP_BUILD == 'false'
         uses: softprops/action-gh-release@v2
         with:
