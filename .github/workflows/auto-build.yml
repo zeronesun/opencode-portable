@@ -8,94 +8,85 @@ permissions:
   contents: write
 
 jobs:
-  check-and-build:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5  # 升级到v5，解决Node.js弃用警告
         with:
-          fetch-depth: 0  # 拉取完整历史，解决标签检查问题
+          fetch-depth: 0
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
-          sudo apt update && sudo apt install -y build-essential git curl jq docker.io
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq git curl jq docker.io
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           platforms: linux/amd64,linux/arm64
 
-      - name: Get latest upstream version
+      - name: Get upstream latest version
         id: upstream
         run: |
-          # 使用GitHub API获取官方最新版本，增加错误处理
-          RESPONSE=$(curl -s -w "%{http_code}" https://api.github.com/repos/anomalyco/opencode/releases/latest)
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
-          BODY=$(echo "$RESPONSE" | head -n -1)
+          # 简单直接获取官方最新版本
+          UPSTREAM_TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
           
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::Failed to get upstream version: HTTP $HTTP_CODE"
-            echo "Response: $BODY"
+          if [ -z "$UPSTREAM_TAG" ] || [ "$UPSTREAM_TAG" == "null" ]; then
+            echo "::error::Failed to get upstream version"
             exit 1
           fi
           
-          TAG=$(echo "$BODY" | jq -r .tag_name)
-          if [ -z "$TAG" ] || [ "$TAG" == "null" ]; then
-            echo "::error::Failed to parse tag from response"
-            echo "Response: $BODY"
-            exit 1
-          fi
-          
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "Upstream latest version: $TAG"
+          echo "UPSTREAM_TAG=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
+          echo "Found upstream version: $UPSTREAM_TAG"
 
-      - name: Check if this version already exists
+      - name: Check if version already exists
         id: check
         run: |
-          # 使用GitHub API检查我们的仓库是否已有该版本
-          TARGET_TAG="${{ steps.upstream.outputs.tag }}-portable"
-          RESPONSE=$(curl -s -w "%{http_code}" https://api.github.com/repos/${{ github.repository }}/releases/tags/$TARGET_TAG)
-          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          TARGET_TAG="${{ steps.upstream.outputs.UPSTREAM_TAG }}-portable"
           
-          if [ "$HTTP_CODE" == "200" ]; then
+          # 使用git ls-remote检查标签是否存在，最可靠的方法
+          if git ls-remote --tags origin | grep -q "refs/tags/$TARGET_TAG"; then
             echo "Version $TARGET_TAG already exists, skipping build"
-            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
           else
             echo "Version $TARGET_TAG does not exist, starting build"
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "SKIP_BUILD=false" >> $GITHUB_OUTPUT
+            echo "TARGET_TAG=$TARGET_TAG" >> $GITHUB_OUTPUT
           fi
 
       - name: Clone upstream code
-        if: steps.check.outputs.exists == 'false'
+        if: steps.check.outputs.SKIP_BUILD == 'false'
         run: |
-          git clone --depth 1 --branch ${{ steps.upstream.outputs.tag }} https://github.com/anomalyco/opencode.git upstream
+          git clone --depth 1 --branch ${{ steps.upstream.outputs.UPSTREAM_TAG }} https://github.com/anomalyco/opencode.git upstream
 
       - name: Apply CJK patches
-        if: steps.check.outputs.exists == 'false'
+        if: steps.check.outputs.SKIP_BUILD == 'false'
         run: |
           cd upstream
           git apply ../patches/001-cjk-fix.patch
           echo "CJK patches applied successfully"
 
-      - name: Build all architectures
-        if: steps.check.outputs.exists == 'false'
+      - name: Build binaries
+        if: steps.check.outputs.SKIP_BUILD == 'false'
         run: |
           chmod +x build/build.sh
-          ./build/build.sh upstream ${{ steps.upstream.outputs.tag }}
+          ./build/build.sh upstream ${{ steps.upstream.outputs.UPSTREAM_TAG }}
 
-      - name: Generate SHA256 checksums
-        if: steps.check.outputs.exists == 'false'
+      - name: Generate checksums
+        if: steps.check.outputs.SKIP_BUILD == 'false'
         run: |
           cd dist
           sha256sum *.tar.gz > SHA256SUMS
-          echo "SHA256 checksums generated:"
+          echo "Checksums generated:"
           cat SHA256SUMS
 
-      - name: Create GitHub Release
-        if: steps.check.outputs.exists == 'false'
+      - name: Create release
+        if: steps.check.outputs.SKIP_BUILD == 'false'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.upstream.outputs.tag }}-portable
-          name: OpenCode ${{ steps.upstream.outputs.tag }} (Portable CJK Edition)
+          tag_name: ${{ steps.check.outputs.TARGET_TAG }}
+          name: OpenCode ${{ steps.upstream.outputs.UPSTREAM_TAG }} (Portable CJK Edition)
           generate_release_notes: true
           files: |
             dist/*.tar.gz
