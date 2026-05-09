@@ -11,44 +11,39 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Build
+      - name: Build OpenCode
         run: |
           # 1. 获取官方最新版本
           TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
-          echo "Building version: $TAG"
+          echo "Building official version: $TAG"
           
           # 2. 克隆官方代码
           git clone --depth 1 --branch $TAG https://github.com/anomalyco/opencode upstream
           
-          # 3. 应用中文补丁
-          cd upstream
-          git apply ../patches/001-cjk-fix.patch
-          cd ..
-          
-          # 4. 构建x86_64版本（先只构建一个架构，确保成功）
+          # 3. 构建x86_64版本（不打补丁，先确保基础构建成功）
           docker build --platform linux/amd64 \
             --build-arg VERSION=$TAG \
-            --build-arg ARCH=x86_64 \
             -f build/Dockerfile \
             -t opencode .
           
-          # 5. 提取二进制文件
+          # 4. 提取二进制文件
+          mkdir -p dist
           docker run --rm -v $PWD/dist:/dist opencode cp -r /opencode /dist/
           
-          # 6. 打包
+          # 5. 打包
           cd dist/opencode
           tar czf ../opencode-$TAG-portable-linux-x86_64.tar.gz .
           cd ..
           rm -rf opencode
           
-          # 7. 生成校验和
+          # 6. 生成校验和
           sha256sum *.tar.gz > SHA256SUMS
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG }}-portable
-          name: OpenCode ${{ env.TAG }} (Portable CJK Edition)
+          name: OpenCode ${{ env.TAG }} (Portable Edition)
           files: |
             dist/*.tar.gz
             dist/SHA256SUMS
