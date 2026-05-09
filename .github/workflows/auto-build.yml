@@ -30,7 +30,7 @@ jobs:
           ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.upstream.outputs.TAG }}-portable
           name: OpenCode ${{ steps.upstream.outputs.TAG }} (Portable)
