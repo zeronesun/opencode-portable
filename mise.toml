@@ -1,11 +1,11 @@
 [plugin]
 name = "opencode-portable"
-repository = "https://github.com/你的用户名/opencode-portable"
-homepage = "https://github.com/你的用户名/opencode-portable"
+repository = "https://github.com/ZerosunGitHub/opencode-portable"
+homepage = "https://github.com/ZerosunGitHub/opencode-portable"
 description = "OpenCode 官方原版 + CJK中文修复 + Musl静态编译适配旧GLIBC"
 
 [versions]
-latest = "https://api.github.com/repos/你的用户名/opencode-portable/releases/latest"
+latest = "https://api.github.com/repos/ZerosunGitHub/opencode-portable/releases/latest"
 
 [install]
 script = """
@@ -17,7 +17,7 @@ case "$(uname -m)" in
 esac
 
 # 下载并解压
-curl -L "https://github.com/你的用户名/opencode-portable/releases/download/${version}/opencode-${version%-portable}-portable-linux-${ARCH}.tar.gz" | tar xz
+curl -L "https://github.com/ZerosunGitHub/opencode-portable/releases/download/${version}/opencode-${version%-portable}-portable-linux-${ARCH}.tar.gz" | tar xz
 
 # 安装到mise目录
 mv bin/* "${mise_path}/bin/"
