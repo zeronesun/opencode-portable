@@ -19,18 +19,31 @@ jobs:
       - name: Get latest official version
         id: upstream
         run: |
-          TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
+          TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r '.tag_name')
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Build x86_64
+      # 构建 普通版 x64 (你之前能用的版本)
+      - name: Build normal x86_64
         run: |
           chmod +x build/build.sh
-          ./build/build.sh ${{ steps.upstream.outputs.TAG }} x86_64
+          ./build/build.sh ${{ steps.upstream.outputs.TAG }} x86_64 normal
 
-      - name: Build arm64
+      # 构建 普通版 arm64
+      - name: Build normal arm64
         run: |
-          ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64
+          ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64 normal
 
+      # 构建 musl版 x64 (旧系统专用)
+      - name: Build musl x86_64
+        run: |
+          ./build/build.sh ${{ steps.upstream.outputs.TAG }} x86_64 musl
+
+      # 构建 musl版 arm64 (旧系统专用)
+      - name: Build musl arm64
+        run: |
+          ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64 musl
+
+      # 自动发布所有包
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
