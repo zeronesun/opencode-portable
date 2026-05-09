@@ -1,7 +1,5 @@
 name: Auto Build & Release
 on:
-  schedule:
-    - cron: '0 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -11,65 +9,46 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v5
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Get latest upstream version
-        id: upstream
+      - name: Build
         run: |
-          UPSTREAM_TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
-          echo "UPSTREAM_TAG=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
-          echo "Found upstream version: $UPSTREAM_TAG"
-
-      - name: Check if version exists
-        id: check
-        run: |
-          TARGET_TAG=${UPSTREAM_TAG}-portable
-          if git ls-remote --tags origin | grep -q "refs/tags/$TARGET_TAG"; then
-            echo "Version $TARGET_TAG already exists, skipping build"
-            echo "SKIP_BUILD=true" >> $GITHUB_OUTPUT
-          else
-            echo "Version $TARGET_TAG does not exist, starting build"
-            echo "SKIP_BUILD=false" >> $GITHUB_OUTPUT
-            echo "TARGET_TAG=$TARGET_TAG" >> $GITHUB_OUTPUT
-          fi
-        env:
-          UPSTREAM_TAG: ${{ steps.upstream.outputs.UPSTREAM_TAG }}
-
-      - name: Clone upstream code
-        if: steps.check.outputs.SKIP_BUILD == 'false'
-        run: git clone --depth 1 --branch ${{ steps.upstream.outputs.UPSTREAM_TAG }} https://github.com/anomalyco/opencode upstream
-
-      - name: Apply CJK patch
-        if: steps.check.outputs.SKIP_BUILD == 'false'
-        run: cd upstream && git apply ../patches/001-cjk-fix.patch
-
-      - name: Build binaries
-        if: steps.check.outputs.SKIP_BUILD == 'false'
-        run: |
-          chmod +x build/build.sh
-          ./build/build.sh upstream ${{ steps.upstream.outputs.UPSTREAM_TAG }}
-
-      - name: Generate SHA256 checksums
-        if: steps.check.outputs.SKIP_BUILD == 'false'
-        run: |
-          cd dist
+          # 1. 获取官方最新版本
+          TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
+          echo "Building version: $TAG"
+          
+          # 2. 克隆官方代码
+          git clone --depth 1 --branch $TAG https://github.com/anomalyco/opencode upstream
+          
+          # 3. 应用中文补丁
+          cd upstream
+          git apply ../patches/001-cjk-fix.patch
+          cd ..
+          
+          # 4. 构建x86_64版本（先只构建一个架构，确保成功）
+          docker build --platform linux/amd64 \
+            --build-arg VERSION=$TAG \
+            --build-arg ARCH=x86_64 \
+            -f build/Dockerfile \
+            -t opencode .
+          
+          # 5. 提取二进制文件
+          docker run --rm -v $PWD/dist:/dist opencode cp -r /opencode /dist/
+          
+          # 6. 打包
+          cd dist/opencode
+          tar czf ../opencode-$TAG-portable-linux-x86_64.tar.gz .
+          cd ..
+          rm -rf opencode
+          
+          # 7. 生成校验和
           sha256sum *.tar.gz > SHA256SUMS
-          echo "Checksums generated:"
-          cat SHA256SUMS
 
-      - name: Create Release
-        if: steps.check.outputs.SKIP_BUILD == 'false'
+      - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.check.outputs.TARGET_TAG }}
-          name: OpenCode ${{ steps.upstream.outputs.UPSTREAM_TAG }} (Portable CJK Edition)
-          generate_release_notes: true
+          tag_name: ${{ env.TAG }}-portable
+          name: OpenCode ${{ env.TAG }} (Portable CJK Edition)
           files: |
             dist/*.tar.gz
             dist/SHA256SUMS
