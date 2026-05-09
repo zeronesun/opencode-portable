@@ -1,3 +1,5 @@
+English | [简体中文](README.md) | [繁體中文](README_ZH_TW.md) | [한국어](README_KO.md)
+
 # opencode-portable
 
 An unofficial portable build of OpenCode, automatically syncing the latest upstream version from [anomalyco/opencode](https://github.com/anomalyco/opencode).
