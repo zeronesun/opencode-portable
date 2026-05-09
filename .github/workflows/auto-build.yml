@@ -1,6 +1,8 @@
 name: Auto Build & Release
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 * * * *'
 
 permissions:
   contents: write
@@ -11,41 +13,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Build OpenCode
-        run: |
-          # 1. 获取官方最新版本
-          TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
-          echo "Building official version: $TAG"
-          
-          # 2. 克隆官方代码
-          git clone --depth 1 --branch $TAG https://github.com/anomalyco/opencode upstream
-          
-          # 3. 构建x86_64版本（不打补丁，先确保基础构建成功）
-          docker build --platform linux/amd64 \
-            --build-arg VERSION=$TAG \
-            -f build/Dockerfile \
-            -t opencode .
-          
-          # 4. 提取二进制文件
-          mkdir -p dist
-          docker run --rm -v $PWD/dist:/dist opencode cp -r /opencode /dist/
-          
-          # 5. 打包
-          cd dist/opencode
-          tar czf ../opencode-$TAG-portable-linux-x86_64.tar.gz .
-          cd ..
-          rm -rf opencode
-          
-          # 6. 生成校验和
-          sha256sum *.tar.gz > SHA256SUMS
+      - name: Install dependencies
+        run: sudo apt update && sudo apt install -y patchelf wget
 
-      - name: Release
+      - name: Get latest official version
+        id: upstream
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/anomalyco/opencode/releases/latest | jq -r .tag_name)
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build portable packages
+        run: |
+          chmod +x build/build.sh
+          ./build/build.sh ${{ steps.upstream.outputs.TAG }} x86_64
+          ./build/build.sh ${{ steps.upstream.outputs.TAG }} arm64
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG }}-portable
-          name: OpenCode ${{ env.TAG }} (Portable Edition)
-          files: |
-            dist/*.tar.gz
-            dist/SHA256SUMS
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.upstream.outputs.TAG }}-portable
+          name: OpenCode ${{ steps.upstream.outputs.TAG }} (Portable)
+          files: dist/*.tar.gz
