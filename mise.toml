@@ -1,0 +1,25 @@
+[plugin]
+name = "opencode-portable"
+repository = "https://github.com/你的用户名/opencode-portable"
+homepage = "https://github.com/你的用户名/opencode-portable"
+description = "OpenCode 官方原版 + CJK中文修复 + Musl静态编译适配旧GLIBC"
+
+[versions]
+latest = "https://api.github.com/repos/你的用户名/opencode-portable/releases/latest"
+
+[install]
+script = """
+# 检测系统架构
+case "$(uname -m)" in
+  x86_64) ARCH="x86_64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *) echo "不支持的架构: $(uname -m)"; exit 1 ;;
+esac
+
+# 下载并解压
+curl -L "https://github.com/你的用户名/opencode-portable/releases/download/${version}/opencode-${version%-portable}-portable-linux-${ARCH}.tar.gz" | tar xz
+
+# 安装到mise目录
+mv bin/* "${mise_path}/bin/"
+mv lib/* "${mise_path}/lib/"
+"""
