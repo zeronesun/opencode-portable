@@ -9,12 +9,17 @@ echo "========================================"
 echo "Building OpenCode $VERSION for $ARCH"
 echo "========================================"
 
+# 架构名修正：x86_64 → amd64（Go 语言项目惯例）
+if [ "$ARCH" = "x86_64" ]; then
+  ARCH="amd64"
+fi
+
 # 1. 准备目录
 mkdir -p "$OUTPUT_DIR"
 mkdir -p portable/bin
 echo "✓ Created directories"
 
-# 2. 下载官方预编译二进制（带错误检查）
+# 2. 下载官方预编译二进制（修正架构名）
 echo "Downloading official binary..."
 URL="https://github.com/anomalyco/opencode/releases/download/${VERSION}/opencode-linux-${ARCH}"
 echo "URL: $URL"
