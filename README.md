@@ -1,63 +1,91 @@
 # opencode-portable
+OpenCode 的第三方便携构建版，自动同步 [anomalyco/opencode](https://github.com/anomalyco/opencode) 上游最新版本，提供 **glibc/musl 双版本 + x86_64/arm64 双架构**，适配所有主流 Linux 发行版，解压即用，无需编译环境。
 
-OpenCode 官方原版 + CJK中文修复 + Musl静态编译适配旧GLIBC 自动同步更新
+---
 
-## ✨ 核心特点
+## ✨ Features
+- **自动同步上游**：每小时自动检测官方更新，构建并发布最新版本
+- **双版本适配**：
+  - `glibc` 版：适配 Ubuntu/Debian 等主流系统，开箱即用
+  - `musl` 版：静态编译，适配 CentOS 7、NAS 等旧系统
+- **双架构支持**：x86_64 + arm64 全平台覆盖
+- **零依赖便携封装**：统一目录结构，与官方命令完全兼容
+- **支持 mise 版本管理**：一键安装/切换/更新
 
-- ✅ **官方最新版本**：每小时自动检测并同步 `anomalyco/opencode` 上游新版本
-- ✅ **完美中文支持**：彻底修复#17032号CJK粘贴bug，中文显示、输入、粘贴完全正常
-- ✅ **全旧系统兼容**：使用musl静态编译，支持CentOS 7、Ubuntu 20.04、QNAP、Synology等所有低版本GLIBC系统
-- ✅ **干净的子进程**：采用Abigail的C预加载库技术，不会污染系统`git`/`ssh`/`curl`等命令
-- ✅ **双架构支持**：同时提供x86_64(amd64)和arm64(aarch64)构建
-- ✅ **一键安装更新**：原生支持mise包管理器
-- ✅ **安全校验**：每个版本自动生成SHA256校验和
+---
 
-## 🚀 安装方法
+## 📦 安装方式（两种方案任选）
 
-### 方法一：使用mise（强烈推荐）
+### 方式 1：mise 一键安装（推荐 ✅）
 ```bash
-# 安装mise（如果还没有）
+# 1. 安装 mise 工具
 curl https://mise.run | sh
 
-# 安装opencode-portable
-mise install github:ZerosunGitHub/opencode-portable@latest
+# 2. 生效 mise 环境
+echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+source ~/.bashrc
 
-# 设置为全局默认
+# 3. 全局安装最新版 opencode-portable
+mise install github:ZerosunGitHub/opencode-portable@latest
 mise use -g opencode-portable@latest
+
+# 4. 验证安装
+opencode --version
+which opencode
 ```
 
-### 方法二：手动安装
-1. 前往 [Releases页面](https://github.com/ZerosunGitHub/opencode-portable/releases) 下载对应架构的最新版本
-2. 解压tarball：`tar xzf opencode-*-portable-linux-*.tar.gz`
-3. 将解压后的`bin`目录添加到你的PATH环境变量
-4. 运行`opencode`即可使用
-
-## 📖 使用方法
-与官方OpenCode完全一致：
+### 方式 2：手动解压安装（无依赖环境）
 ```bash
-# 直接启动
-opencode
+# 1. 创建目录并解压
+mkdir -p ~/opencode-portable
+tar -xzf opencode-*-portable-linux-*.tar.gz -C ~/opencode-portable
 
+# 2. 添加环境变量
+echo 'export PATH="$HOME/opencode-portable/opencode/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# 3. 验证安装
+opencode --version
+which opencode
+```
+
+---
+
+## ✅ 完整验证步骤（所有安装方式通用）
+执行以下命令，确认安装成功：
+```bash
 # 查看版本
 opencode --version
 
-# 查看帮助
-opencode --help
+# 查看程序路径
+which opencode
+
+# 直接启动
+opencode
 ```
 
-## 🆚 版本对比
-| 版本 | 中文支持 | 旧GLIBC兼容 | 子进程无污染 | 更新速度 | 多架构支持 |
-|------|----------|-------------|--------------|----------|------------|
-| 官方原版 | ❌ | ❌ | ✅ | 官方发布 | ✅ |
-| pedropombeiro版 | ❌ | ✅ | ⚠️ 部分解决 | 每小时 | ✅ |
-| Abigail版 | ✅ | ✅ | ✅ | 1-2周 | ❌ |
-| **opencode-portable** | ✅ | ✅ | ✅ | 每小时 | ✅ |
+---
 
-## ⚠️ 免责声明
-本项目是第三方开源衍生项目，与OpenCode官方团队(anomalyco)没有任何关联。所有核心功能归官方所有，本项目仅提供：
-1. CJK多字节字符显示和输入修复
-2. 旧GLIBC系统兼容性适配
-3. 自动化构建和发布流程
+## ❌ 不推荐软链接到 ~/.local/bin 的原因
+`opencode` 为脚本包装器，依赖同目录下的二进制文件。  
+仅软链接脚本会导致**找不到依赖文件**报错，将完整 bin 目录加入 PATH 是最稳定方案。
 
-## 📄 许可证
-MIT
+---
+
+## ❓ FAQ
+### 1. 版本选择
+- 主流 Linux（Ubuntu/Debian）：使用 **glibc 版**
+- 旧系统/NAS：使用 **musl 版**
+
+### 2. musl 版在 Ubuntu 报错？
+musl 与 Ubuntu 原生库不兼容，普通用户**仅使用 glibc 版**即可。
+
+### 3. 如何更新？
+- mise：`mise upgrade opencode-portable`
+- 手动：重新下载最新压缩包替换
+
+---
+
+## 📜 License
+基于官方 [anomalyco/opencode](https://github.com/anomalyco/opencode) 构建，遵循 MIT 协议
+```
