@@ -31,7 +31,7 @@ docker buildx build --platform linux/arm64 \
 cd dist
 for arch in x86_64 arm64; do
   mkdir -p opencode-$arch
-  tar xf opencode-$arch.tar -C opencode-$arch
+  tar xf opencode-$arch.tar -C opencode-$arch --strip-components=1
   tar czf opencode-$VERSION-portable-linux-$arch.tar.gz -C opencode-$arch .
   rm -rf opencode-$arch opencode-$arch.tar
 done
