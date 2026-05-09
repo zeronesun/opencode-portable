@@ -17,34 +17,51 @@ OpenCode 的第三方便携构建版，自动同步 [anomalyco/opencode](https:/
 ## 📦 安装方式（两种方案任选）
 
 ### 方式 1：mise 一键安装（推荐 ✅）
-```bash
-# 1. 安装 mise 工具
-curl https://mise.run | sh
 
-# 2. 生效 mise 环境
+1. 安装 mise 工具
+
+```bash
+curl https://mise.run | sh
+```
+
+2. 生效 mise 环境
+```bash
 echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
 source ~/.bashrc
+```
 
-# 3. 全局安装最新版 opencode-portable
+3. 全局安装最新版 opencode-portable
+
+```bash
 mise install github:ZerosunGitHub/opencode-portable@latest
 mise use -g opencode-portable@latest
+```
 
-# 4. 验证安装
+4. 验证安装
+
+```bash
 opencode --version
 which opencode
 ```
 
 ### 方式 2：手动解压安装（无依赖环境）
+
+1. 创建目录并解压
+
 ```bash
-# 1. 创建目录并解压
 mkdir -p ~/opencode-portable
 tar -xzf opencode-*-portable-linux-*.tar.gz -C ~/opencode-portable
+```
 
-# 2. 添加环境变量
+2. 添加环境变量
+```bash
 echo 'export PATH="$HOME/opencode-portable/opencode/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
+```
 
-# 3. 验证安装
+3. 验证安装
+
+```bash
 opencode --version
 which opencode
 ```
@@ -53,14 +70,21 @@ which opencode
 
 ## ✅ 完整验证步骤（所有安装方式通用）
 执行以下命令，确认安装成功：
+
+查看版本
+
 ```bash
-# 查看版本
 opencode --version
+```
 
-# 查看程序路径
+查看程序路径
+```bash
 which opencode
+```
 
-# 直接启动
+直接启动
+
+```bash
 opencode
 ```
 
