@@ -1,29 +1,49 @@
 #!/bin/bash
 set -euo pipefail
 
+# 参数：版本号 架构 版本类型(normal/musl，可选，默认normal)
 VERSION="$1"
 ARCH="$2"
+BUILD_TYPE="${3:-normal}"
 OUTPUT_DIR="dist"
 
+# 架构适配
 if [ "$ARCH" = "x86_64" ]; then
   ARCH="x64"
 fi
 
+# 仅清理临时文件，不删除输出目录
 rm -rf tmp extracted opencode
 mkdir -p tmp extracted "$OUTPUT_DIR" opencode/bin
 
 echo "========================================"
-echo "Building OpenCode $VERSION (musl portable)"
+echo "构建 OpenCode $VERSION | 架构:$ARCH | 类型:$BUILD_TYPE"
 echo "========================================"
 
-wget -q "https://github.com/anomalyco/opencode/releases/download/${VERSION}/opencode-linux-${ARCH}-musl.tar.gz" -O tmp/opencode.tar.gz
+# 下载对应版本压缩包
+if [ "$BUILD_TYPE" = "musl" ]; then
+  FILE_URL="https://github.com/anomalyco/opencode/releases/download/${VERSION}/opencode-linux-${ARCH}-musl.tar.gz"
+  FILE_SUFFIX="-musl"
+else
+  FILE_URL="https://github.com/anomalyco/opencode/releases/download/${VERSION}/opencode-linux-${ARCH}.tar.gz"
+  FILE_SUFFIX=""
+fi
+
+# 下载 + 解压
+wget -q "$FILE_URL" -O tmp/opencode.tar.gz
 tar -xzf tmp/opencode.tar.gz -C extracted/
 
+# 自动查找二进制文件
 OPCODE_PATH=$(find extracted -type f -name "opencode" -print -quit)
 cp "$OPCODE_PATH" opencode/bin/opencode
 chmod +x opencode/bin/opencode
 
-tar -czf "${OUTPUT_DIR}/opencode-${VERSION}-portable-linux-${ARCH}.tar.gz" opencode/
+# 打包（文件名区分版本，不覆盖）
+tar -czf "${OUTPUT_DIR}/opencode-${VERSION}-portable-linux-${ARCH}${FILE_SUFFIX}.tar.gz" opencode/
 
+# 清理临时文件
 rm -rf tmp extracted opencode
-echo "✅ Success: ${OUTPUT_DIR}/opencode-${VERSION}-portable-linux-${ARCH}.tar.gz"
+
+echo "✅ 构建完成！"
+echo "📦 输出：opencode-${VERSION}-portable-linux-${ARCH}${FILE_SUFFIX}.tar.gz"
+echo "========================================"
