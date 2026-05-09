@@ -1,0 +1,40 @@
+diff --git a/internal/tui/render.go b/internal/tui/render.go
+index 8a2f6c5..b9f2137 100644
+--- a/internal/tui/render.go
++++ b/internal/tui/render.go
+@@ -18,6 +18,7 @@ import (
+ 	"strings"
+ 	"unicode"
+ 	"unicode/utf8"
++	"golang.org/x/text/width"
+ )
+
+ // getDisplayWidth 返回字符串终端显示宽度
+@@ -26,7 +27,11 @@ func getDisplayWidth(s string) int {
+ 	w := 0
+ 	for _, r := range s {
+ 		if unicode.IsPrint(r) {
+-			w++
++			switch width.LookupRune(r) {
++			case width.EastAsianWide, width.EastAsianFull:
++				w += 2
++			default: w +=1
++			}
+ 		}
+ 	}
+ 	return w
+diff --git a/internal/clipboard/paste.go b/internal/clipboard/paste.go
+index 72ac111..55d9b32 100644
+--- a/internal/clipboard/paste.go
++++ b/internal/clipboard/paste.go
+@@ -45,6 +45,10 @@ func CleanPastedText(text string) string {
+ 	// 去除多余首尾空行
+ 	text = strings.TrimSpace(text)
+
++	// 修复CJK粘贴混入预览标记问题
++	text = strings.ReplaceAll(text, "[Pasted ", "")
++	text = strings.ReplaceAll(text, " lines]", "")
++
+ 	// 统一换行符
+ 	text = strings.ReplaceAll(text, "\r\n", "\n")
+ 	return text
