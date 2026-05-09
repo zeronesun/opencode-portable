@@ -1,5 +1,4 @@
-```markdown
-[English](README_EN.md) | [简体中文](README.md) | 繁體中文
+[English](README_EN.md) | [简体中文](README.md) | 繁體中文 | [한국어](README_KO.md)
 
 # opencode-portable
 OpenCode 第三方可攜式建置版本，自動同步 [anomalyco/opencode](https://github.com/anomalyco/opencode) 上游最新版本，提供 **glibc/musl 雙版本 + x86_64/arm64 雙架構**，相容所有主流 Linux 發行版，解壓即可使用，無需編譯環境。
