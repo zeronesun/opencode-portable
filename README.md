@@ -1,3 +1,5 @@
+[English](README_EN.md) | 简体中文 | [繁體中文](README_ZH_TW.md) | [한국어](README_KO.md)
+
 # opencode-portable
 OpenCode 的第三方便携构建版，自动同步 [anomalyco/opencode](https://github.com/anomalyco/opencode) 上游最新版本，提供 **glibc/musl 双版本 + x86_64/arm64 双架构**，适配所有主流 Linux 发行版，解压即用，无需编译环境。
 
