@@ -1,12 +1,11 @@
 FROM alpine:3.20 AS builder
 ARG VERSION
-ARG ARCH
 
 RUN apk add --no-cache build-base git go nodejs npm musl-dev
 
 ENV CGO_ENABLED=1
 ENV GOOS=linux
-ENV GOARCH=$ARCH
+ENV GOARCH=amd64
 
 COPY upstream /workspace
 WORKDIR /workspace
