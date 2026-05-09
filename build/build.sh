@@ -20,13 +20,13 @@ echo "========================================"
 echo "构建 OpenCode $VERSION | 架构:$ARCH | 类型:$BUILD_TYPE"
 echo "========================================"
 
-# 下载对应版本压缩包
+# 关键修正：强制确保普通版带 -glibc 后缀
 if [ "$BUILD_TYPE" = "musl" ]; then
   FILE_URL="https://github.com/anomalyco/opencode/releases/download/${VERSION}/opencode-linux-${ARCH}-musl.tar.gz"
   FILE_SUFFIX="-musl"
 else
   FILE_URL="https://github.com/anomalyco/opencode/releases/download/${VERSION}/opencode-linux-${ARCH}.tar.gz"
-  FILE_SUFFIX=""
+  FILE_SUFFIX="-glibc"  # 普通版强制添加 -glibc 后缀
 fi
 
 # 下载 + 解压
@@ -38,12 +38,13 @@ OPCODE_PATH=$(find extracted -type f -name "opencode" -print -quit)
 cp "$OPCODE_PATH" opencode/bin/opencode
 chmod +x opencode/bin/opencode
 
-# 打包（文件名区分版本，不覆盖）
-tar -czf "${OUTPUT_DIR}/opencode-${VERSION}-portable-linux-${ARCH}${FILE_SUFFIX}.tar.gz" opencode/
+# 打包（强制拼接后缀）
+FINAL_FILENAME="opencode-${VERSION}-portable-linux-${ARCH}${FILE_SUFFIX}.tar.gz"
+tar -czf "${OUTPUT_DIR}/${FINAL_FILENAME}" opencode/
 
 # 清理临时文件
 rm -rf tmp extracted opencode
 
 echo "✅ 构建完成！"
-echo "📦 输出：opencode-${VERSION}-portable-linux-${ARCH}${FILE_SUFFIX}.tar.gz"
+echo "📦 输出文件：${FINAL_FILENAME}"
 echo "========================================"
