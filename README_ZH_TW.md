@@ -33,7 +33,7 @@ source ~/.bashrc
 
 3. 全域安裝最新版 opencode-portable
 ```bash
-mise install github:ZerosunGitHub/opencode-portable@latest
+mise install github:zeronesun/opencode-portable@latest
 mise use -g opencode-portable@latest
 ```
 
