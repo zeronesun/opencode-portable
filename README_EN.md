@@ -109,4 +109,3 @@ Musl is incompatible with Ubuntu's native glibc. Regular users should only use t
 
 ## 📜 License
 Built based on [anomalyco/opencode](https://github.com/anomalyco/opencode), licensed under MIT.
-```
