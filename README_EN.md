@@ -35,7 +35,7 @@ source ~/.bashrc
 
 3. Install latest opencode-portable globally
 ```bash
-mise install github:ZerosunGitHub/opencode-portable@latest
+mise install github:zeronesun/opencode-portable@latest
 mise use -g opencode-portable@latest
 ```
 
