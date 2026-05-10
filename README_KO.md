@@ -108,4 +108,3 @@ musl은 Ubuntu의 기본 glibc와 호환되지 않습니다. 일반 사용자는
 
 ## 📜 라이센스
 [anomalyco/opencode](https://github.com/anomalyco/opencode)를 기반으로 빌드되었으며, MIT 라이센스를 따릅니다.
-```当前文件内容过长，豆包只阅读了前 15%。
