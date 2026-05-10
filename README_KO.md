@@ -34,7 +34,7 @@ source ~/.bashrc
 
 3. 최신 opencode-portable 전역 설치
 ```bash
-mise install github:ZerosunGitHub/opencode-portable@latest
+mise install github:zeronesun/opencode-portable@latest
 mise use -g opencode-portable@latest
 ```
 
@@ -108,3 +108,16 @@ musl은 Ubuntu의 기본 glibc와 호환되지 않습니다. 일반 사용자는
 
 ## 📜 라이센스
 [anomalyco/opencode](https://github.com/anomalyco/opencode)를 기반으로 빌드되었으며, MIT 라이센스를 따릅니다.
+
+## 📜 License
+基于官方 [anomalyco/opencode](https://github.com/anomalyco/opencode) 构建，遵循 MIT 协议
+
+## ⭐ Star History
+
+<a href="https://www.star-history.com/?repos=zeronesun%2Fopencode-portable&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=zeronesun/opencode-portable&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=zeronesun/opencode-portable&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=zeronesun/opencode-portable&type=date&legend=top-left" />
+ </picture>
+</a>
