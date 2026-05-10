@@ -109,3 +109,14 @@ Musl is incompatible with Ubuntu's native glibc. Regular users should only use t
 
 ## 📜 License
 Built based on [anomalyco/opencode](https://github.com/anomalyco/opencode), licensed under MIT.
+
+
+## ⭐ Star History
+
+<a href="https://www.star-history.com/?repos=zeronesun%2Fopencode-portable&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=zeronesun/opencode-portable&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=zeronesun/opencode-portable&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=zeronesun/opencode-portable&type=date&legend=top-left" />
+ </picture>
+</a>
